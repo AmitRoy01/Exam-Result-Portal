@@ -42,3 +42,4 @@ A modern, web-based **exam result portal** that allows students and guardians to
 
 1. Clone this repository:
    ```bash
+https://github.com/AmitRoy01/Exam-Result-Portal.git
