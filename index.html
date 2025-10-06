@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Big Bang Exam Care - Result Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #e3f2fd);
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 6px 25px rgba(0,0,0,0.15);
+      padding: 30px;
+    }
+    .logo-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+    .logo-title img {
+      width: 60px;
+      height: auto;
+    }
+    .logo-title h1 {
+      color: #e53935;
+      font-size: 2em;
+      margin: 0;
+    }
+    h2 {
+      text-align: center;
+      color: #555;
+      font-size: 1.2em;
+      margin-top: 0;
+      margin-bottom: 25px;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+    }
+    input:focus, select:focus {
+      border-color: #1565c0;
+      box-shadow: 0 0 6px rgba(21,101,192,0.4);
+      outline: none;
+    }
+    .btns {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    button {
+      width: 48%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #1565c0;
+      color: #fff;
+      font-size: 1em;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #0d47a1;
+    }
+    #result {
+      margin-top: 30px;
+      font-size: 0.95em;
+      display: none;
+    }
+    .mark-sheet {
+      border: 2px solid #1565c0;
+      border-radius: 10px;
+      padding: 25px;
+      margin-top: 20px;
+      background: #fdfdfd;
+    }
+    .mark-sheet h3 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #1565c0;
+      font-size: 1.5em;
+    }
+    .info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    .info div {
+      width: 48%;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    .mark-sheet table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 1em;
+    }
+    .mark-sheet th, .mark-sheet td {
+      border: 1px solid #1565c0;
+      padding: 12px;
+      text-align: center;
+    }
+    .mark-sheet th {
+      background-color: #1565c0;
+      color: #fff;
+      font-weight: bold;
+    }
+    .mark-sheet td {
+      background-color: #e8f0fe;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
+    }
+    @media print {
+      body * { visibility: hidden; }
+      #result, #result * { visibility: visible; }
+      #result { position: absolute; top: 0; left: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-title">
+      <img src="https://scontent.fdac11-2.fna.fbcdn.net/v/t39.30808-6/494061792_1193712522765315_8453246432232638293_n.jpg?_nc_cat=1&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=N25XnMKKcUYQ7kNvwEQt4GW&_nc_oc=Adns8Ub-ymFBIYAb_Niv57E5Bv-fdOtW60stVb0BxZ-prvvyZL10W_XAMjyjbUewhfo&_nc_zt=23&_nc_ht=scontent.fdac11-2.fna&_nc_gid=6SU2JIFxLRgCVXmhcoPxYg&oh=00_AfdKoO6PQX4jC1PHLLjIifb-i9sCDGe4G03H4FqiDY8PXA&oe=68E9F2A4" alt="Logo">
+      <h1>Big Bang Exam Care</h1>
+    </div>
+    <h2>Result Portal</h2>
+
+    <select id="exam"><option value="">Select Exam</option></select>
+    <select id="batch">
+      <option value="">Select Batch</option>
+      <option value="SSC">SSC</option>
+      <option value="HSC">HSC</option>
+      <option value="Engineering">Engineering</option>
+      <option value="Medical">Medical</option>
+      <option value="Varsity">Varsity</option>
+    </select>
+    <input type="text" id="roll" placeholder="Enter Roll Number">
+    <input type="text" id="phone" placeholder="Enter Student Phone OR Guardian Phone">
+
+    <div class="btns">
+      <button onclick="searchResult()">Search</button>
+      <button id="printBtn" onclick="window.print()" style="display:none;">Print</button>
+    </div>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbxQLwZByynQ3GQlzzMsPD-oZUmRIfOrMyDrdx7IKGc5yYTTLxBcDQyIrz6IZ6yMVvzEPA/exec";
+
+    function normalizePhone(phone) {
+      phone = phone.replace(/\D/g, "");
+      if(phone.length > 10) phone = phone.slice(-10);
+      return phone;
+    }
+
+    // function formatPhone(phone) {
+    //   phone = normalizePhone(phone);
+    //   if(!phone.startsWith("01")) phone = "01"+phone.slice(-2);
+    //   return phone;
+    // }
+    function formatPhone(phone) {
+        phone = phone.replace(/\D/g, ""); // Remove non-digits
+        if (phone.length === 10 && phone.startsWith("01")) {
+            return phone; // If already valid, return as is
+        }
+        if (phone.length === 10) {
+            phone = "0" + phone; // Add leading 0 if missing
+        }
+        return phone;
+        }
+
+    async function loadExamList() {
+      try {
+        const response = await fetch(webAppUrl + "?action=getExamList");
+        const exams = await response.json();
+        const examSelect = document.getElementById("exam");
+        exams.forEach(e => {
+          const opt = document.createElement("option");
+          opt.value = e;
+          opt.text = e;
+          examSelect.appendChild(opt);
+        });
+      } catch(err) {
+        console.error("Error loading exams:", err);
+      }
+    }
+
+    async function searchResult() {
+      const exam = document.getElementById("exam").value.trim();
+      const batch = document.getElementById("batch").value.trim();
+      const roll = document.getElementById("roll").value.trim();
+      const phone = normalizePhone(document.getElementById("phone").value.trim());
+
+      if(!exam || !batch || !roll || !phone){
+        alert("⚠️ Please fill all fields properly.");
+        return;
+      }
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "<p>🔎 Searching...</p>";
+      resultDiv.style.display = "block";
+
+      try {
+        const params = new URLSearchParams({
+          action: "getResult",
+          exam, batch, roll, studentPhone: phone, guardianPhone: phone
+        });
+        const response = await fetch(webAppUrl + "?" + params.toString());
+        const data = await response.json();
+
+        const printBtn = document.getElementById("printBtn");
+
+        if(data.error){
+          resultDiv.innerHTML = `<p class='error'>${data.error}</p>`;
+          printBtn.style.display = "none";
+          return;
+        }
+
+        resultDiv.innerHTML = `
+          <div class="mark-sheet">
+            <div class="logo-title">
+              <img src="https://scontent.fdac11-2.fna.fbcdn.net/v/t39.30808-6/494061792_1193712522765315_8453246432232638293_n.jpg?_nc_cat=1&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=N25XnMKKcUYQ7kNvwEQt4GW&_nc_oc=Adns8Ub-ymFBIYAb_Niv57E5Bv-fdOtW60stVb0BxZ-prvvyZL10W_XAMjyjbUewhfo&_nc_zt=23&_nc_ht=scontent.fdac11-2.fna&_nc_gid=6SU2JIFxLRgCVXmhcoPxYg&oh=00_AfdKoO6PQX4jC1PHLLjIifb-i9sCDGe4G03H4FqiDY8PXA&oe=68E9F2A4" alt="Logo">
+              <h1>Big Bang Exam Care</h1>
+            </div>
+            <h3>Mark Sheet</h3>
+            <div class="info">
+              <div><b>Exam:</b> ${data.exam}</div>
+              <div><b>Batch:</b> ${data.batch}</div>
+            </div>
+            <div class="info">
+              <div><b>Name:</b> ${data.name}</div>
+              <div><b>Roll:</b> ${data.roll}</div>
+            </div>
+            <div class="info">
+              <div><b>Student Phone:</b> ${formatPhone(data.studentPhone)}</div>
+              <div><b>Guardian Phone:</b> ${formatPhone(data.guardianPhone)}</div>
+            </div>
+            <table>
+              <tr><th>MCQ</th><th>Written</th><th>Total</th></tr>
+              <tr><td>${data.mcq}</td><td>${data.written}</td><td>${data.total}</td></tr>
+            </table>
+          </div>
+        `;
+        printBtn.style.display = "inline-block";
+
+      } catch(err){
+        resultDiv.innerHTML = `<p class='error'>Error fetching result.</p>`;
+        console.error(err);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", loadExamList);
+  </script>
+</body>
+</html>

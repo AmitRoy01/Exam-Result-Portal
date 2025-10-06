@@ -1,0 +1,103 @@
+// 🔹 Main entry point
+function doGet(e) {
+  const params = e.parameter;
+
+  // If external HTML requests exam list
+  if (params.action === "getExamList") {
+    const exams = getExamList();
+    return ContentService
+      .createTextOutput(JSON.stringify(exams))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // If external HTML requests a result
+  if (params.action === "getResult") {
+    const result = getResult(
+      params.exam,
+      params.batch,
+      params.roll,
+      params.studentPhone,
+      params.guardianPhone
+    );
+    return ContentService
+      .createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Default: serve index.html if accessed directly in browser
+  return HtmlService.createHtmlOutputFromFile('index')
+    .setTitle('Result Portal');
+}
+
+// 🔹 Fetch all available exams (sheet names)
+function getExamList() {
+  const sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+  return sheets.map(s => s.getName());
+}
+
+// 🔹 Normalize phone number: remove +88, 88, or leading 0
+function normalizePhone(phone) {
+  if (!phone) return "";
+  return String(phone).replace(/^(\+88|88)?0?/, "");
+}
+
+// 🔹 Format Bangladeshi phone numbers
+function formatBDPhone(phone) {
+  if (!phone) return "";
+  const norm = normalizePhone(phone);
+  return "0" + norm;
+}
+
+// 🔹 Search result in a given sheet
+function getResult(examName, batch, roll, studentPhone, guardianPhone) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(examName);
+  if (!sh) return { error: "❌ Exam sheet not found." };
+
+  const data = sh.getDataRange().getValues();
+  const headers = data[0];
+  const col = {
+    exam: headers.indexOf("Exam"),
+    batch: headers.indexOf("Batch"),
+    roll: headers.indexOf("Roll"),
+    name: headers.indexOf("Name"),
+    studentPhone: headers.indexOf("Student Phone No"),
+    guardianPhone: headers.indexOf("Guardian Phone No"),
+    mcq: headers.indexOf("MCQ"),
+    written: headers.indexOf("Written"),
+    total: headers.indexOf("Total"),
+  };
+
+  const sPhoneNorm = normalizePhone(studentPhone);
+  const gPhoneNorm = normalizePhone(guardianPhone);
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const rollMatch = String(row[col.roll]).trim() === roll;
+    const batchMatch = String(row[col.batch]).trim().toLowerCase() === batch.toLowerCase();
+
+    const rowStudentPhone = normalizePhone(row[col.studentPhone]);
+    const rowGuardianPhone = normalizePhone(row[col.guardianPhone]);
+    const phoneMatch =
+      rowStudentPhone === sPhoneNorm ||
+      rowGuardianPhone === sPhoneNorm ||
+      rowStudentPhone === gPhoneNorm ||
+      rowGuardianPhone === gPhoneNorm;
+
+    if (rollMatch && batchMatch && phoneMatch) {
+      return {
+        exam: row[col.exam],
+        batch: row[col.batch],
+        roll: row[col.roll],
+        name: row[col.name],
+        studentPhone: formatBDPhone(row[col.studentPhone]),
+        guardianPhone: row[col.guardianPhone] ? formatBDPhone(row[col.guardianPhone]) : "N/A",
+        mcq: row[col.mcq],
+        written: row[col.written],
+        total: row[col.total],
+      };
+    }
+  }
+
+  return { error: "❌ No record found. Please check your inputs again." };
+}
